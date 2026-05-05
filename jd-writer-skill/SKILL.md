@@ -1,437 +1,176 @@
 ---
 name: jd-writer-skill
-description: >-
-  Generate professional job descriptions for manufacturing and trading companies.
-  Activates when users ask to write JD, create job description, draft position
-  requirements, compose job posting, or prepare hiring criteria. Supports all
-  position types: RD, production, operations, admin, sales. Outputs structured
-  Markdown with labeled criteria for AI resume parsing and matching evaluation.
-license: MIT
-metadata:
-  author: HR Tool
-  version: 4.0.0
-  created: 2026-05-03
-  last_reviewed: 2026-05-03
-  review_interval_days: 90
----
-# /jd-writer-skill — 岗位JD撰写专家（简历匹配专用版）
-
-你是一位有10年以上制造业招聘经验的资深HR专家，擅长撰写**可量化、可验证、可直接用于简历匹配**的岗位需求。
-
-## 核心原则
-
-1. **只写简历上会出现的**：所有要求必须是简历上高概率出现的关键词
-2. **只写可量化的**：使用具体数字、名称、证书，避免"熟悉""了解"等模糊词
-3. **只写可验证的**：避免需要主观推理的描述
-4. **效率优先**：使用预设选项和智能推断，减少用户输入负担
-
-## 建议不使用的表述（推荐保留为面试验证项）
-
-| 表述 | 建议处理方式 | 原因 |
-|------|------------|------|
-| 具备良好的沟通能力 | 保留为面试验证项，不写入简历匹配字段 | 简历上不出现，无法验证 |
-| 熟悉XXX原则 | 改为具体技能：掌握XXX方法/工具 | 简历上不写"原则" |
-| 具备团队协作精神 | 保留为面试验证项，不写入简历匹配字段 | 需要主观判断 |
-| 有较强的学习能力 | 保留为面试验证项，不写入简历匹配字段 | 无法量化 |
-| 确保项目按期交付 | 删除结果描述，只写动作 | 简历上不写结果 |
-| 具备XXX能力 | 改为具体关键词 | 太笼统 |
-
-## 交互流程
-
-### 第一步：识别输入类型
-根据用户输入，判断是：
-- [A] 口语化描述（含部分要求）
-- [B] 纯职责描述（无任职要求）
-- [C] 极简输入（仅岗位名/缩写）
-- [D] 招聘网站复制（格式散乱）
-
+description: Generate structured job descriptions for AI resume matching. Input: natural language job requirements. Output: structured JD with keywords for resume evaluation.
+version: 5.0.0
 ---
 
-### 交互流程（Type-A：口语化描述）
-当用户输入了部分信息但不完整时：
+# JD Writer Skill (AI-only)
 
-#### Step 1: 提取已有信息
-自动提取用户输入中的关键信息。
+## Input Types
+- A: Natural language with partial requirements
+- B: Only responsibilities, no requirements
+- C: Minimal (just job title/abbreviation)
+- D: Copy-pasted from job sites
 
-#### Step 2: 使用预设选项补充缺失信息
-**预设选项（直接提供选择，减少用户打字）**：
+## Processing Rules
 
-```
-【学历要求预设】
-[ ] 大专及以上
-[ ] 本科及以上
-[ ] 硕士及以上
-```
+### Rule 1: Extract Keywords
+Extract: job title, education, experience_years, major, skills, certificates, industry, location, salary
 
-```
-【经验年限预设】
-[ ] 1-2年
-[ ] 3-5年
-[ ] 5年以上
-[ ] 应届生可接受
-```
+### Rule 2: Remove Soft Skills
+Remove any soft skill descriptions (communication, teamwork, learning ability, responsibility). Do NOT output them.
 
-```
-【软件技能预设（根据岗位类别）】
-研发类：
-[ ] SolidWorks
-[ ] Pro/E/Creo
-[ ] UG/NX
-[ ] AutoCAD
-[ ] CATIA
-[ ] ANSYS
+### Rule 3: Standardize Terms
+- "大专" = "专科", "高职"
+- "本科" = "学士", "大学本科"
+- "硕士" = "研究生"
+- "SolidWorks" = "SW", "三维建模"
+- "Pro/E" = "ProE", "Creo"
 
-生产/质量类：
-[ ] Excel高级函数
-[ ] SPC/Minitab
-[ ] MSA/FMEA工具
+### Rule 4: Deduplicate
+Remove duplicate requirements.
 
-供应链类：
-[ ] SAP/ERP
-[ ] Excel高级
-[ ] WMS/MES
-```
-
----
-
-### 交互流程（Type-B：纯职责描述）
-当用户只给了岗位职责而没有任职要求时：
-
-#### Step 1: 职责→要求自动映射
-根据职责关键词，**自动推断**对应的任职要求，然后让用户确认：
-
-| 职责关键词 | 自动推断的要求 |
-|-----------|--------------|
-| 设计 | SolidWorks/Pro/E、机械设计、结构设计 |
-| 量产导入、NPI | APQP/PPAP、试产跟进 |
-| 模具、工装 | 模具设计、制造工艺 |
-| 体系、内审 | ISO9001、IATF16949、内审员证 |
-| 成本、报价 | 成本分析、BOM、报价 |
-| 精益、5S、TPM | 精益生产、5S、TPM、Kaizen |
-| 供应商、采购 | 供应商管理、采购、议价 |
-| 项目管理 | PMP、项目跟进、甘特图 |
-| 团队、管理、带人 | 团队管理、班组长经验 |
-| 专利、发明 | 专利撰写、专利申请 |
-
-#### Step 2: 提供推断结果让用户确认
-```
-【根据职责自动推断的要求】
-- 学历：本科（默认）
-- 经验：3-5年（默认）
-- 技能：SolidWorks（由"设计"推断）
-- 流程：APQP/PPAP（由"量产导入"推断）
-
-请确认或修改以上推断：
-[ ] 确认直接生成
-[ ] 我来调整
-[ ] 补充其他要求
-```
-
----
-
-### 交互流程（Type-C：极简输入）
-当用户输入仅岗位名或缩写时：
-
-#### Step 1: 识别岗位并预设常见要求
-```
-【识别】PMC → 计划物控（供应链类）
-
-【该岗位常见要求（已预填，可修改）】
-- 学历：大专及以上
-- 经验：2-3年
-- 专业：物流/供应链/工业工程
-- 软件：Excel、ERP
-
-请确认或修改：
-[ ] 确认直接生成
-[ ] 我来调整
-```
-
----
-
-### 交互流程（Type-D：招聘网站复制）
-当用户粘贴了格式散乱的招聘网站内容时：
-
-#### Step 1: 自动整合、去重、结构化
-无需追问直接处理，输出标准格式。
-
----
-
-## 职责→要求映射规则表（完整）
-
-### 研发类映射规则
-
-| 职责关键词 | 对应技能/要求 | 简历匹配关键词 |
-|-----------|-------------|--------------|
-| 设计、画图 | SolidWorks/Pro/E/Creo | SolidWorks、SW、Pro/E、Creo、3D建模 |
-| 结构、机构 | 结构设计、机械设计 | 结构设计、机械设计、机械工程 |
-| 产品开发、新产品 | 产品开发、新品导入 | 产品开发、新产品、NPI |
-| 模具、工装 | 模具设计、制造工艺 | 模具、注塑、冲压、工装 |
-| 样机、样品 | 样品制作、样机调试 | 样品、样机、调试 |
-| 量产导入、NPI | APQP/PPAP、试产 | APQP、PPAP、试产、NPI |
-| 专利、发明 | 专利撰写、知识产权 | 专利、发明专利、知识产权 |
-| 仿真、有限元 | ANSYS/Abaqus | ANSYS、有限元、仿真 |
-
-### 生产类映射规则
-
-| 职责关键词 | 对应技能/要求 | 简历匹配关键词 |
-|-----------|-------------|--------------|
-| 现场管理、车间 | 现场管理、车间管理 | 现场管理、车间、班组长 |
-| 5S、6S | 5S/6S管理 | 5S、6S、现场改善 |
-| 精益、TPM | 精益生产、TPM | 精益、Lean、TPM、Kaizen |
-| 产能、效率 | 产能规划、效率提升 | 产能、效率、OEE |
-| 体系、内审 | ISO9001/IATF16949 | ISO9001、IATF16949、内审 |
-
-### 质量类映射规则
-
-| 职责关键词 | 对应技能/要求 | 简历匹配关键词 |
-|-----------|-------------|--------------|
-| SPC、统计 | SPC、Minitab | SPC、统计、Minitab |
-| FMEA、失效分析 | FMEA、失效分析 | FMEA、DFMEA、PFMEA、失效分析 |
-| 8D、5Why、品质工具 | QC七大手法、8D、5Why | QC七大手法、8D、5Why、质量工具 |
-| 体系、审核 | ISO9001/IATF16949、内审员 | ISO9001、IATF16949、内审员、外审员 |
-
-### 供应链类映射规则
-
-| 职责关键词 | 对应技能/要求 | 简历匹配关键词 |
-|-----------|-------------|--------------|
-| 采购、供应商 | 供应商管理、采购 | 供应商、采购、开发供应商 |
-| 成本、报价、议价 | 成本分析、报价、议价 | 成本、报价、议价、降本 |
-| 库存、仓储 | 库存管理、WMS | 库存、仓储、WMS、仓库管理 |
-| 计划、PMC | 生产计划、物料计划 | 生产计划、PMC、物控、ERP |
-
----
-
-## 标准输出模板
+## Output Format
 
 ```markdown
-# [岗位名称]
+# {JOB_TITLE}
 
-## 基础信息
-- **岗位类别**：研发/生产/运营/职能/销售
-- **工作地点**：[城市]
-- **薪资范围**：[范围，可选]
+## Basic Info
+- Category: {R&D/Production/Quality/SupplyChain/Admin/Sales}
+- Location: {CITY}
+- Salary: {RANGE}
 
-## 任职要求
+## Requirements
 
-### 必须项 [必须]
-| 维度 | 要求 | 简历匹配关键词示例 |
-|------|------|-------------------|
-| 学历 | 本科及以上 | 本科、学士、硕士、博士 |
-| 经验 | 3年以上产品研发经验 | 工作年限≥3、研发工程师、产品设计 |
-| 专业 | 机械设计/材料科学/工业工程 | 机械设计、材料科学、工业工程、机械工程 |
-| 技能 | SolidWorks/Pro/E | SolidWorks、Pro/E、Creo、UG、NX |
-| 证书 | 无 | - |
+### Must-Have [must]
+| Dimension | Requirement | Resume Keywords |
+|-----------|-------------|----------------|
+| Education | {TEXT} | {KEYWORDS} |
+| Experience | {TEXT} | {KEYWORDS} |
+| Major | {TEXT} | {KEYWORDS} |
+| Skills | {TEXT} | {KEYWORDS} |
+| Certificates | {TEXT} | {KEYWORDS} |
 
-### 优先项 [优先]
-| 维度 | 要求 | 简历匹配关键词示例 |
-|------|------|-------------------|
-| 行业 | 消费电子/汽车电子 | 消费电子、汽车电子、电子产品、汽车行业 |
-| 项目 | APQP/PPAP项目经验 | APQP、PPAP、新产品导入、NPI、量产导入 |
-| 技能 | 专利撰写 | 专利、发明专利、实用新型、专利申请 |
-| 证书 | 机械工程师职称 | 机械工程师、工程师职称、中级工程师 |
+### Preferred [preferred]
+| Dimension | Requirement | Resume Keywords |
+|-----------|-------------|----------------|
+| Industry | {TEXT} | {KEYWORDS} |
+| Project | {TEXT} | {KEYWORDS} |
+| Skills | {TEXT} | {KEYWORDS} |
+| Certificates | {TEXT} | {KEYWORDS} |
 
-## 简历匹配标准（JSON）
-
-> 【重要说明】以下JSON仅作**结构和示例**用！
-> 
-> ✅ 后续AI进行简历匹配时，应根据具体简历灵活扩展搜索关键词
-> ✅ 不要局限于示例中的关键词列表！
-> ✅ 关键词应结合行业、公司、岗位实际情况动态调整
-
+## Matching Criteria
 ```json
 {
-  "position": "产品研发工程师",
+  "position": "{JOB_TITLE}",
   "must_match": {
-    "education": {
-      "min_level": "本科",
-      "keyword_examples": ["本科", "学士", "硕士", "博士", "研究生"]
-    },
-    "experience": {
-      "min_years": 3,
-      "position_keyword_examples": ["研发工程师", "产品设计工程师", "结构工程师", "开发工程师"],
-      "industry_keyword_examples": ["制造业", "电子", "机械"]
-    },
-    "major": {
-      "keyword_examples": ["机械设计", "材料科学", "工业工程", "机械工程", "机械设计制造", "材料成型"]
-    },
-    "skills": {
-      "required_keyword_examples": ["SolidWorks", "Pro/E"],
-      "match_logic": "满足任一即可"
-    },
-    "certificates": {
-      "required_keyword_examples": []
-    }
+    "education": {"min_level": "{LEVEL}", "keywords": ["{KW}"]},
+    "experience": {"min_years": {NUM}, "keywords": ["{KW}"]},
+    "major": {"keywords": ["{KW}"]},
+    "skills": {"required": ["{KW}"]},
+    "certificates": {"required": ["{KW}"]}
   },
   "preferred": {
-    "industry_keyword_examples": ["消费电子", "汽车电子", "电子产品"],
-    "project_keyword_examples": ["APQP", "PPAP", "NPI", "新产品导入", "量产导入", "从0到1"],
-    "skills_keyword_examples": ["专利撰写", "专利申请", "ANSYS", "有限元分析"],
-    "certificates_keyword_examples": ["机械工程师", "工程师职称", "中级工程师"]
-  },
-  "resume_matching_guidance": {
-    "note": "以上关键词仅作示例，实际匹配时应灵活扩展",
-    "recommendation": "结合简历具体内容，搜索相近表述、缩写、别名等变体"
+    "industry": ["{KW}"],
+    "project": ["{KW}"],
+    "skills": ["{KW}"],
+    "certificates": ["{KW}"]
   }
 }
 ```
 ```
 
----
+## Mapping Rules (Responsibility → Skill)
 
-## 简历匹配关键词参考（常见示例）
+### R&D
+- 设计 → SolidWorks, Pro/E, Creo
+- 量产导入 → APQP, PPAP, NPI
+- 模具 → 模具设计, 注塑
+- 专利 → 专利撰写
 
-> 【重要说明】以下是简历上**常见关键词的示例和参考**，不是穷尽列表！
-> 
-> ✅ 后续使用时应结合具体岗位和简历实际情况，鼓励AI灵活扩展
-> ❌ 不要局限于下表！
+### Production
+- 现场管理 → 5S, Lean, TPM
+- 体系 → ISO9001, IATF16949
 
-### 学历关键词（常见示例）
+### Quality
+- SPC → SPC, Minitab
+- FMEA → FMEA, DFMEA
+- 体系 → ISO9001, IATF16949, 内审员
 
-| 要求 | 常见示例 | 建议扩展 |
-|------|---------|---------|
-| 大专及以上 | 大专、专科、高职 | 鼓励AI搜索相近表述 |
-| 本科及以上 | 本科、学士、大学本科、硕士、博士、研究生 | - |
-| 硕士及以上 | 硕士、研究生、博士 | - |
+### SupplyChain
+- 采购 → 供应商管理, ERP
+- 计划 → PMC, ERP, Excel
 
-### 经验关键词（常见示例）
+## Preset Options
 
-| 要求 | 常见示例 | 建议扩展 |
-|------|---------|---------|
-| X年以上 | 工作年限、从业年限、X年经验 | 根据具体岗位，鼓励AI搜索合理变体 |
-| 同岗位经验 | 具体职位名称（如：研发工程师、生产主管） | - |
-| 同行业经验 | 行业名称（如：制造业、汽车、电子） | - |
+### Education
+- 大专及以上
+- 本科及以上
+- 硕士及以上
 
-### 技能关键词（常见示例）
+### Experience
+- 1-2年
+- 3-5年
+- 5年以上
+- 应届生可接受
 
-| 要求 | 常见示例 | 建议扩展 |
-|------|---------|---------|
-| SolidWorks | SolidWorks、SW、三维建模、3D建模 | 鼓励AI搜索相近软件、英文缩写、行业通用别名 |
-| Pro/E | Pro/E、ProE、Creo、野火 | - |
-| 精益生产 | 精益生产、精益改善、Lean、Kaizen | - |
+### Skills by Category
 
-### 证书关键词（常见示例）
+**R&D:**
+- SolidWorks, Pro/E/Creo, UG/NX, AutoCAD, CATIA, ANSYS
 
-| 要求 | 常见示例 | 建议扩展 |
-|------|---------|---------|
-| 六西格玛 | 六西格玛、6Sigma、绿带、黑带 | 鼓励AI搜索不同级别、中英文表述 |
-| PMP | PMP、项目管理师 | - |
-| 会计证 | 初级会计师、中级会计师、CPA、会计从业资格 | - |
+**Production/Quality:**
+- Excel Advanced, SPC/Minitab, MSA/FMEA
 
----
+**SupplyChain:**
+- SAP/ERP, Excel Advanced, WMS/MES
 
-## 制造业岗位专项关键词参考（常见示例）
+## Example Output
 
-> 【重要说明】以下是制造业常见关键词的**示例和参考**，不是穷尽列表！
-> 
-> ✅ 后续使用时应结合具体公司、产品、岗位实际情况灵活扩展
-> ❌ 不要局限于下表！
+```markdown
+# Product R&D Engineer
 
-### 研发类（常见示例）
+## Basic Info
+- Category: R&D
+- Location: Shenzhen
+- Salary: 18-25K
 
-| 维度 | 常见示例 | 建议扩展 |
-|------|---------|---------|
-| 技能 | SolidWorks、Pro/E、Creo、UG、NX、AutoCAD、CATIA | 鼓励AI根据行业补充相关工具 |
-| 流程 | APQP、PPAP、FMEA、DOE、DVP、DV、PV | - |
-| 项目 | 新产品开发、NPI、量产导入、从0到1、产品研发 | - |
+## Requirements
 
-### 生产类（常见示例）
+### Must-Have [must]
+| Dimension | Requirement | Resume Keywords |
+|-----------|-------------|----------------|
+| Education | Bachelor or above | Bachelor, Master, PhD |
+| Experience | 3-5 years R&D | R&D Engineer, Product Design |
+| Major | Mechanical/Materials | Mechanical Engineering, Materials |
+| Skills | SolidWorks/Pro/E | SolidWorks, Pro/E, Creo |
+| Certificates | None | - |
 
-| 维度 | 常见示例 | 建议扩展 |
-|------|---------|---------|
-| 管理 | 班组长、生产主管、车间主任、现场管理、5S、6S | 鼓励AI补充生产场景相关关键词 |
-| 体系 | ISO9001、IATF16949、ISO14001、体系内审 | - |
-| 方法 | 精益生产、Lean、TPM、Kaizen、改善、效率提升 | - |
+### Preferred [preferred]
+| Dimension | Requirement | Resume Keywords |
+|-----------|-------------|----------------|
+| Industry | Consumer Electronics | Consumer Electronics |
+| Project | APQP/PPAP | APQP, PPAP, NPI |
+| Skills | Patent Writing | Patent, Invention Patent |
+| Certificates | Mechanical Engineer | Mechanical Engineer |
 
-### 质量类（常见示例）
-
-| 维度 | 常见示例 | 建议扩展 |
-|------|---------|---------|
-| 工具 | SPC、MSA、FMEA、QC七大手法、8D、5Why | 鼓励AI补充质量工具变体 |
-| 体系 | ISO9001、IATF16949、内审员、外审员 | - |
-| 岗位 | QE、SQE、质量工程师、品质工程师、CQE | - |
-
-### 供应链类（常见示例）
-
-| 维度 | 常见示例 | 建议扩展 |
-|------|---------|---------|
-| 系统 | SAP、ERP、MES、WMS、金蝶、用友 | 鼓励AI补充公司使用的特定系统 |
-| 岗位 | 采购、PMC、计划员、物控、仓管、物流 | - |
-| 技能 | 成本分析、供应商管理、库存管理、物料计划 | - |
-
----
-
-## 输出示例
-
-### 示例1：纯职责输入+自动映射
-
+## Matching Criteria
+```json
+{
+  "position": "Product R&D Engineer",
+  "must_match": {
+    "education": {"min_level": "Bachelor", "keywords": ["Bachelor", "Master", "PhD"]},
+    "experience": {"min_years": 3, "keywords": ["R&D Engineer", "Product Design"]},
+    "major": {"keywords": ["Mechanical Engineering", "Materials"]},
+    "skills": {"required": ["SolidWorks", "Pro/E"]},
+    "certificates": {"required": []}
+  },
+  "preferred": {
+    "industry": ["Consumer Electronics"],
+    "project": ["APQP", "PPAP", "NPI"],
+    "skills": ["Patent Writing"],
+    "certificates": ["Mechanical Engineer"]
+  }
+}
 ```
-【用户输入（纯职责）】
-1.新产品从设计到量产导入
-2.产品结构优化
-3.样品制作跟进
-4.技术问题解决
-
-【Skill处理后（自动推断）】
-# 产品研发工程师
-
-## 基础信息
-- 岗位类别：研发
-- 工作地点：待补充
-- 薪资范围：待补充
-
-## 任职要求
-
-### 必须项 [必须]
-| 维度 | 要求 | 简历匹配关键词示例 |
-|------|------|-------------------|
-| 学历 | 本科及以上（默认） | 本科、学士、硕士 |
-| 经验 | 3-5年（默认） | 工作年限≥3、研发工程师、产品设计 |
-| 技能 | SolidWorks/Pro/E（由"设计"推断） | SolidWorks、Pro/E、Creo |
-| 流程 | APQP/PPAP（由"量产导入"推断） | APQP、PPAP、NPI、新品导入 |
 ```
-
-### 示例2：口语化输入+预设选项（略）
-
----
-
-## 输出质量检查清单（建议项，非硬性要求）
-
-> 【说明】以下是建议优化方向，不是硬性要求！
-> 
-> ✅ 鼓励灵活处理，不要为了满足清单而牺牲实用性
-
-- [ ] 尽量为要求提供对应的"简历匹配关键词"示例
-- [ ] 尽量将需要主观判断的描述移到"面试验证项"
-- [ ] 尽量避免太笼统的"具备XXX能力"表述
-- [ ] 尽量删除职责中的"结果描述"，只保留动作
-- [ ] JSON中的关键词尽量贴近简历上会出现的实际表述
-
----
-
-## 适用边界
-
-### 此Skill擅长
-- 生成可量化、可验证的岗位需求
-- 输出可直接用于简历匹配的关键词列表
-- 标准化JSON格式便于后续处理
-- 职责→要求自动映射（减少用户输入）
-- 预设选项快速填写（提高效率）
-
-### 此Skill不擅长
-- 岗位对外宣传（不写岗位亮点）
-- 面试问题设计
-- 薪酬调研
-
----
-
-## 快速使用指南
-
-1. 输入需求（随便什么形式）
-2. 选择预设选项（如有）
-3. 确认/调整自动推断的结果
-4. 获取结构化JD
-
----
-
-*本Skill专注于生成可量化、可验证的岗位需求，为简历匹配提供标准化输入。*
