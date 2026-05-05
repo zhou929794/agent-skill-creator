@@ -1,175 +1,175 @@
 ---
 name: jd-writer-skill
-description: Generate structured job descriptions for AI resume matching. Input: natural language job requirements. Output: structured JD with keywords for resume evaluation.
+description: 将自然语言岗位需求转换为结构化JD，输出用于简历匹配的关键词和JSON标准
 version: 5.0.0
 ---
 
-# JD Writer Skill (AI-only)
+# 岗位JD生成器（AI专用版）
 
-## Input Types
-- A: Natural language with partial requirements
-- B: Only responsibilities, no requirements
-- C: Minimal (just job title/abbreviation)
-- D: Copy-pasted from job sites
+## 输入类型识别
+- A：口语化描述（含部分要求）
+- B：纯职责描述（无任职要求）
+- C：极简输入（仅岗位名/缩写）
+- D：招聘网站复制（格式散乱）
 
-## Processing Rules
+## 处理规则
 
-### Rule 1: Extract Keywords
-Extract: job title, education, experience_years, major, skills, certificates, industry, location, salary
+### 规则1：提取关键词
+提取：岗位名称、学历、经验年限、专业、技能、证书、行业、地点、薪资
 
-### Rule 2: Remove Soft Skills
-Remove any soft skill descriptions (communication, teamwork, learning ability, responsibility). Do NOT output them.
+### 规则2：删除软技能
+删除所有软技能描述（沟通能力、团队协作、学习能力、责任心等），不输出。
 
-### Rule 3: Standardize Terms
+### 规则3：标准化表述
 - "大专" = "专科", "高职"
 - "本科" = "学士", "大学本科"
 - "硕士" = "研究生"
 - "SolidWorks" = "SW", "三维建模"
 - "Pro/E" = "ProE", "Creo"
 
-### Rule 4: Deduplicate
-Remove duplicate requirements.
+### 规则4：去重
+删除重复的要求。
 
-## Output Format
+## 输出格式
 
 ```markdown
-# {JOB_TITLE}
+# {岗位名称}
 
-## Basic Info
-- Category: {R&D/Production/Quality/SupplyChain/Admin/Sales}
-- Location: {CITY}
-- Salary: {RANGE}
+## 基础信息
+- 岗位类别：{研发/生产/质量/供应链/职能/销售}
+- 工作地点：{城市}
+- 薪资范围：{范围}
 
-## Requirements
+## 任职要求
 
-### Must-Have [must]
-| Dimension | Requirement | Resume Keywords |
-|-----------|-------------|----------------|
-| Education | {TEXT} | {KEYWORDS} |
-| Experience | {TEXT} | {KEYWORDS} |
-| Major | {TEXT} | {KEYWORDS} |
-| Skills | {TEXT} | {KEYWORDS} |
-| Certificates | {TEXT} | {KEYWORDS} |
+### 必须项 [必须]
+| 维度 | 要求 | 简历匹配关键词 |
+|------|------|----------------|
+| 学历 | {文本} | {关键词} |
+| 经验 | {文本} | {关键词} |
+| 专业 | {文本} | {关键词} |
+| 技能 | {文本} | {关键词} |
+| 证书 | {文本} | {关键词} |
 
-### Preferred [preferred]
-| Dimension | Requirement | Resume Keywords |
-|-----------|-------------|----------------|
-| Industry | {TEXT} | {KEYWORDS} |
-| Project | {TEXT} | {KEYWORDS} |
-| Skills | {TEXT} | {KEYWORDS} |
-| Certificates | {TEXT} | {KEYWORDS} |
+### 优先项 [优先]
+| 维度 | 要求 | 简历匹配关键词 |
+|------|------|----------------|
+| 行业 | {文本} | {关键词} |
+| 项目 | {文本} | {关键词} |
+| 技能 | {文本} | {关键词} |
+| 证书 | {文本} | {关键词} |
 
-## Matching Criteria
+## 简历匹配标准
 ```json
 {
-  "position": "{JOB_TITLE}",
+  "position": "{岗位名称}",
   "must_match": {
-    "education": {"min_level": "{LEVEL}", "keywords": ["{KW}"]},
-    "experience": {"min_years": {NUM}, "keywords": ["{KW}"]},
-    "major": {"keywords": ["{KW}"]},
-    "skills": {"required": ["{KW}"]},
-    "certificates": {"required": ["{KW}"]}
+    "education": {"min_level": "{学历}", "keywords": ["{关键词}"]},
+    "experience": {"min_years": {年限}, "keywords": ["{关键词}"]},
+    "major": {"keywords": ["{关键词}"]},
+    "skills": {"required": ["{关键词}"]},
+    "certificates": {"required": ["{关键词}"]}
   },
   "preferred": {
-    "industry": ["{KW}"],
-    "project": ["{KW}"],
-    "skills": ["{KW}"],
-    "certificates": ["{KW}"]
+    "industry": ["{关键词}"],
+    "project": ["{关键词}"],
+    "skills": ["{关键词}"],
+    "certificates": ["{关键词}"]
   }
 }
 ```
 ```
 
-## Mapping Rules (Responsibility → Skill)
+## 职责→技能映射规则
 
-### R&D
+### 研发类
 - 设计 → SolidWorks, Pro/E, Creo
 - 量产导入 → APQP, PPAP, NPI
 - 模具 → 模具设计, 注塑
 - 专利 → 专利撰写
 
-### Production
-- 现场管理 → 5S, Lean, TPM
+### 生产类
+- 现场管理 → 5S, 精益生产, TPM
 - 体系 → ISO9001, IATF16949
 
-### Quality
+### 质量类
 - SPC → SPC, Minitab
 - FMEA → FMEA, DFMEA
 - 体系 → ISO9001, IATF16949, 内审员
 
-### SupplyChain
+### 供应链类
 - 采购 → 供应商管理, ERP
 - 计划 → PMC, ERP, Excel
 
-## Preset Options
+## 预设选项
 
-### Education
+### 学历
 - 大专及以上
 - 本科及以上
 - 硕士及以上
 
-### Experience
+### 经验
 - 1-2年
 - 3-5年
 - 5年以上
 - 应届生可接受
 
-### Skills by Category
+### 技能（按岗位类别）
 
-**R&D:**
+**研发类：**
 - SolidWorks, Pro/E/Creo, UG/NX, AutoCAD, CATIA, ANSYS
 
-**Production/Quality:**
-- Excel Advanced, SPC/Minitab, MSA/FMEA
+**生产/质量类：**
+- Excel高级, SPC/Minitab, MSA/FMEA
 
-**SupplyChain:**
-- SAP/ERP, Excel Advanced, WMS/MES
+**供应链类：**
+- SAP/ERP, Excel高级, WMS/MES
 
-## Example Output
+## 输出示例
 
 ```markdown
-# Product R&D Engineer
+# 产品研发工程师
 
-## Basic Info
-- Category: R&D
-- Location: Shenzhen
-- Salary: 18-25K
+## 基础信息
+- 岗位类别：研发
+- 工作地点：深圳
+- 薪资范围：18-25K
 
-## Requirements
+## 任职要求
 
-### Must-Have [must]
-| Dimension | Requirement | Resume Keywords |
-|-----------|-------------|----------------|
-| Education | Bachelor or above | Bachelor, Master, PhD |
-| Experience | 3-5 years R&D | R&D Engineer, Product Design |
-| Major | Mechanical/Materials | Mechanical Engineering, Materials |
-| Skills | SolidWorks/Pro/E | SolidWorks, Pro/E, Creo |
-| Certificates | None | - |
+### 必须项 [必须]
+| 维度 | 要求 | 简历匹配关键词 |
+|------|------|----------------|
+| 学历 | 本科及以上 | 本科、学士、硕士、博士 |
+| 经验 | 3-5年研发经验 | 研发工程师、产品设计 |
+| 专业 | 机械/材料 | 机械工程、材料科学 |
+| 技能 | SolidWorks/Pro/E | SolidWorks、Pro/E、Creo |
+| 证书 | 无 | - |
 
-### Preferred [preferred]
-| Dimension | Requirement | Resume Keywords |
-|-----------|-------------|----------------|
-| Industry | Consumer Electronics | Consumer Electronics |
-| Project | APQP/PPAP | APQP, PPAP, NPI |
-| Skills | Patent Writing | Patent, Invention Patent |
-| Certificates | Mechanical Engineer | Mechanical Engineer |
+### 优先项 [优先]
+| 维度 | 要求 | 简历匹配关键词 |
+|------|------|----------------|
+| 行业 | 消费电子 | 消费电子 |
+| 项目 | APQP/PPAP | APQP、PPAP、NPI |
+| 技能 | 专利撰写 | 专利、发明专利 |
+| 证书 | 机械工程师 | 机械工程师、工程师职称 |
 
-## Matching Criteria
+## 简历匹配标准
 ```json
 {
-  "position": "Product R&D Engineer",
+  "position": "产品研发工程师",
   "must_match": {
-    "education": {"min_level": "Bachelor", "keywords": ["Bachelor", "Master", "PhD"]},
-    "experience": {"min_years": 3, "keywords": ["R&D Engineer", "Product Design"]},
-    "major": {"keywords": ["Mechanical Engineering", "Materials"]},
+    "education": {"min_level": "本科", "keywords": ["本科", "学士", "硕士", "博士"]},
+    "experience": {"min_years": 3, "keywords": ["研发工程师", "产品设计"]},
+    "major": {"keywords": ["机械工程", "材料科学"]},
     "skills": {"required": ["SolidWorks", "Pro/E"]},
     "certificates": {"required": []}
   },
   "preferred": {
-    "industry": ["Consumer Electronics"],
+    "industry": ["消费电子"],
     "project": ["APQP", "PPAP", "NPI"],
-    "skills": ["Patent Writing"],
-    "certificates": ["Mechanical Engineer"]
+    "skills": ["专利撰写"],
+    "certificates": ["机械工程师"]
   }
 }
 ```
