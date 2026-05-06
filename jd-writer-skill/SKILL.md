@@ -1,7 +1,7 @@
 ---
 name: jd-writer-skill
-description: 将自然语言岗位需求转换为结构化JD，输出用于简历匹配的关键词和JSON标准
-version: 5.1.0
+description: 将自然语言岗位需求转换为结构化JD，输出用于简历匹配的结构化文本
+version: 5.2.0
 ---
 
 # 岗位JD生成器（AI专用版）
@@ -98,28 +98,6 @@ version: 5.1.0
 | 技能 | {文本} | {关键词} |
 | 证书 | {文本} | {关键词} |
 
-## 简历匹配标准
-```json
-{
-  "position": "{岗位名称}",
-  "must_match": {
-    "education": {"min_level": "{学历}", "keywords": ["{关键词}"]},
-    "experience": {"min_years": {年限}, "keywords": ["{关键词}"]},
-    "major": {"keywords": ["{关键词}"]},
-    "skills": {"required": ["{关键词}"]},
-    "certificates": {"required": ["{关键词}"]},
-    "management": {"team_size": {人数}, "keywords": ["{关键词}"]}
-  },
-  "preferred": {
-    "industry": ["{关键词}"],
-    "project": ["{关键词}"],
-    "skills": ["{关键词}"],
-    "certificates": ["{关键词}"]
-  }
-}
-```
-```
-
 ---
 
 ## 职责→技能映射规则
@@ -190,7 +168,7 @@ version: 5.1.0
 1. 识别矛盾点
 2. 在输出中标注矛盾
 3. 取较宽松的条件作为必须项
-4. 在JSON中添加notes字段说明
+4. 在文本中用括号说明
 
 示例：
 ```
@@ -210,7 +188,7 @@ PMC
 ```
 
 **输出**：
-```markdown
+```
 # PMC
 
 ## 基础信息
@@ -232,21 +210,6 @@ PMC
 | 维度 | 要求 | 简历匹配关键词 |
 |------|------|----------------|
 | - | - | - |
-
-## 简历匹配标准
-```json
-{
-  "position": "PMC",
-  "must_match": {
-    "education": {"min_level": "大专", "keywords": ["大专", "专科", "高职"]},
-    "experience": {"min_years": 2, "keywords": ["PMC", "生产计划", "物控"]},
-    "major": {"keywords": ["物流管理", "供应链管理"]},
-    "skills": {"required": ["ERP", "Excel"]},
-    "certificates": {"required": []}
-  },
-  "preferred": {}
-}
-```
 ```
 
 ---
@@ -255,11 +218,11 @@ PMC
 
 **输入**：
 ```
-帮我们招一个做产品研发的，最好本科学历，机械专业，3-5年经验，会用SolidWorks， 有汽车电子经验更好，薪资18-25K
+帮我们招一个做产品研发的，最好本科学历，机械专业，3-5年经验，会用SolidWorks，有汽车电子经验更好，薪资18-25K
 ```
 
 **输出**：
-```markdown
+```
 # 产品研发工程师
 
 ## 基础信息
@@ -276,32 +239,11 @@ PMC
 | 经验 | 3-5年研发经验 | 研发工程师、产品设计 |
 | 专业 | 机械 | 机械工程、机械设计 |
 | 技能 | SolidWorks | SolidWorks、SW、三维建模 |
-| 证书 | 无 | - |
 
 ### 优先项 [优先]
 | 维度 | 要求 | 简历匹配关键词 |
 |------|------|----------------|
 | 行业 | 汽车电子 | 汽车电子、汽车行业 |
-
-## 简历匹配标准
-```json
-{
-  "position": "产品研发工程师",
-  "must_match": {
-    "education": {"min_level": "本科", "keywords": ["本科", "学士", "硕士", "博士"]},
-    "experience": {"min_years": 3, "keywords": ["研发工程师", "产品设计"]},
-    "major": {"keywords": ["机械工程", "机械设计"]},
-    "skills": {"required": ["SolidWorks"]},
-    "certificates": {"required": []}
-  },
-  "preferred": {
-    "industry": ["汽车电子"],
-    "project": [],
-    "skills": [],
-    "certificates": []
-  }
-}
-```
 ```
 
 ---
@@ -314,7 +256,7 @@ PMC
 ```
 
 **输出**：
-```markdown
+```
 # 车间主管
 
 ## 基础信息
@@ -336,20 +278,4 @@ PMC
 | 维度 | 要求 | 简历匹配关键词 |
 |------|------|----------------|
 | - | - | - |
-
-## 简历匹配标准
-```json
-{
-  "position": "车间主管",
-  "must_match": {
-    "education": {"min_level": "大专", "keywords": ["大专", "专科", "高职"]},
-    "experience": {"min_years": 5, "keywords": ["车间主管", "现场管理"]},
-    "major": {"keywords": []},
-    "skills": {"required": ["5S", "精益生产"]},
-    "certificates": {"required": []},
-    "management": {"team_size": 20, "keywords": ["团队管理", "带人"]}
-  },
-  "preferred": {}
-}
-```
 ```
